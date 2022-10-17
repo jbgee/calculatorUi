@@ -9,32 +9,35 @@ for(const button of numberButtons){
         if(operandB == null){
             currentCalcDisplay.textContent = "";
         }
-        currentCalcDisplay.textContent += button.target.textContent;
-        operandB = Number(currentCalcDisplay.textContent);
+        if(currentCalcDisplay.textContent.length<11){
+            currentCalcDisplay.textContent += button.target.textContent;
+            operandB = Number(currentCalcDisplay.textContent);
+        }
     });
 }
 
 for(const operation of operatorButtons){
     operation.addEventListener('click',operation => {
-        operator = operation.target.textContent;
+        newOperator = operation.target.textContent;
 
         if(operandA==null){
             operandA = Number(currentCalcDisplay.textContent);
-            pastCalcDisplay.textContent = `${operandA} ${operator}`;
+            pastCalcDisplay.textContent = `${operandA} ${newOperator}`;
+            currentCalcDisplay.textContent = "";
             operandB = null;
 
         }else if(operandA&&operandB){
             let parsedEq = pastCalcDisplay.textContent.split(" ");
             if (parsedEq.length ==2){
-                updateResult(operandA,operandB,operator);
+                updateResultOperator(operandA,operandB,parsedEq[1],newOperator);
             }
             else{
                 operandA = Number(currentCalcDisplay.textContent);
-                pastCalcDisplay.textContent = `${operandA} ${operator}`;
+                pastCalcDisplay.textContent = `${operandA} ${newOperator}`;
                 operandB = null;    
             }
         }else{
-            pastCalcDisplay.textContent = `${operandA} ${operator}`;
+            pastCalcDisplay.textContent = `${operandA} ${newOperator}`;
         }
         
     })
@@ -46,17 +49,39 @@ equalButton.addEventListener('click',() => {
         let parsedEq = pastCalcDisplay.textContent.split(" ");
         if (parsedEq.length ==2){
             let operator = parsedEq[1];
-            updateResult(operandA,operandB,operator);
+            updateResultEqual(operandA,operandB,operator);
         }
     }
 });
 
-function updateResult(operand1,operand2,operator){
-    let result = operate(operand1,operand2,operator);
-    pastCalcDisplay.textContent = `${operand1} ${operator} ${operand2} =`; 
-    currentCalcDisplay.textContent = `${result}`
+function updateResultOperator(operand1,operand2,previousOperator,newOperator){
+    let result = operate(operand1,operand2,previousOperator);
+    pastCalcDisplay.textContent = `${result} ${newOperator}`; 
     operandB = null;
     operandA = result;
+    if(result.toString().length > 11){
+        let sciResult = result.toExponential();
+        let splitSciNotation = sciResult.toString().split("e");
+        let sigFigs = 9-splitSciNotation[1].length;
+        result = result.toPrecision(sigFigs);
+    
+    }
+    currentCalcDisplay.textContent = `${result}`;
+}
+
+function updateResultEqual(operand1,operand2,operator){
+    let result = operate(operand1,operand2,operator);
+    pastCalcDisplay.textContent = `${operand1} ${operator} ${operand2} =`; 
+    operandB = null;
+    operandA = result;
+    if(result.toString().length > 11){
+        let sciResult = result.toExponential();
+        let splitSciNotation = sciResult.toString().split("e");
+        let sigFigs = 9-splitSciNotation[1].length;
+        result = result.toPrecision(sigFigs);
+    
+    }
+    currentCalcDisplay.textContent = `${result}`;
 }
 
 const clearButton = document.querySelector('#clearButton');
@@ -97,23 +122,11 @@ function subtract(operand1,operand2){
 }
 
 function divide(operand1,operand2){
-    return parseFloat((operand1 / operand2).toFixed(9));
+    return parseFloat((operand1 / operand2).toPrecision(9));
 }
 
 function multiply(operand1,operand2){
-    let product = operand1 * operand2;
-    let productLength = operand1.toString().length + operand2.toString().length;
-    let roundedProduct = parseFloat((product).toFixed(productLength));
-    if(roundedProduct.toString().length > 9){
-        let sciProduct = roundedProduct.toExponential();
-        let splitSciNotation = sciProduct.toString().split("e");
-        let sigFigs = 9-splitSciNotation[1].length;
-        console.log(`sigfig ${sigFigs}`);
-        return roundedProduct.toFixed(sigFigs);
-
-    }
-
-    return roundedProduct;
+    return operand1 * operand2;
 }
 
 function mod(operand1,operand2){
